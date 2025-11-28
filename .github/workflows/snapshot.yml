@@ -43,7 +43,7 @@ jobs:
 
     - name: Test
       if: ${{ inputs.run-tests }}
-      run: dotnet test -c Release -o ./build-output --no-build
+      run: dotnet test -c Release
 
     - name: Pack
       shell: powershell
