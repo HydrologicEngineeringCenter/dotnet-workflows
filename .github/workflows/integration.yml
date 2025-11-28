@@ -1,0 +1,38 @@
+name: Integration
+
+on:
+  workflow_call:
+    inputs:
+      dotnet-version:
+        type: string
+        default: '9.0.x'
+        description: '.NET SDK version to use'
+      warnings-as-errors:
+        type: boolean
+        default: false
+        description: 'Treat compiler warnings as errors'
+      run-tests:
+        type: boolean
+        default: false
+        description: 'Run tests after build'
+
+jobs:
+  CI:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET Core SDK ${{ inputs.dotnet-version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Build
+      run: dotnet build -c Release ${{ inputs.warnings-as-errors && '-warnaserror' || '' }}
+
+    - name: Test
+      if: ${{ inputs.run-tests }}
+      run: dotnet test -c Release --no-build

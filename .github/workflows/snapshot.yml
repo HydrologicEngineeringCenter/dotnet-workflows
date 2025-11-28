@@ -1,0 +1,67 @@
+name: Snapshot
+
+on:
+  workflow_call:
+    inputs:
+      dotnet-version:
+        type: string
+        default: '9.0.x'
+        description: '.NET SDK version to use'
+      project-names:
+        type: string
+        required: true
+        description: 'Comma-separated list of project names to pack (first project is used for version extraction)'
+      run-tests:
+        type: boolean
+        default: false
+        description: 'Run tests after build'
+      nuget-source:
+        type: string
+        default: 'https://www.hec.usace.army.mil/nexus/repository/consequences-nuget-public'
+        description: 'NuGet repository URL to publish packages to'
+    secrets:
+      NUGET_API_KEY:
+        required: true
+        description: 'API key for NuGet repository'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET Core SDK ${{ inputs.dotnet-version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Build
+      run: dotnet build -c Release -o ./build-output
+
+    - name: Test
+      if: ${{ inputs.run-tests }}
+      run: dotnet test -c Release -o ./build-output --no-build
+
+    - name: Pack
+      shell: powershell
+      run: |
+        $projectNames = "${{ inputs.project-names }}" -split ',' | ForEach-Object { $_.Trim() }
+        foreach ($project in $projectNames) {
+          # Get the assembly version from the built DLL
+          $assemblyPath = "./build-output/$project.dll"
+          $assembly = [System.Reflection.Assembly]::LoadFrom((Resolve-Path $assemblyPath).Path)
+          $assemblyVersion = $assembly.GetName().Version
+
+          # Extract major.minor.patch and create snapshot version
+          $baseVersion = "$($assemblyVersion.Major).$($assemblyVersion.Minor).$($assemblyVersion.Build)"
+          $snapshotVersion = "${baseVersion}.${{ github.run_number }}-dev"
+
+          Write-Host "Packing $project with version: $snapshotVersion (from assembly version: $assemblyVersion)"
+          dotnet pack $project --configuration Release /p:PackageVersion=$snapshotVersion --no-build -o ./packages
+        }
+
+    - name: Publish
+      run: dotnet nuget push "**/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source "${{ inputs.nuget-source }}" --skip-duplicate

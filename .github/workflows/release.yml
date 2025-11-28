@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      dotnet-version:
+        type: string
+        default: '9.0.x'
+        description: '.NET SDK version to use'
+      project-names:
+        type: string
+        required: true
+        description: 'Comma-separated list of project names to pack (all use version from tag)'
+      run-tests:
+        type: boolean
+        default: false
+        description: 'Run tests after build'
+      nuget-source:
+        type: string
+        default: 'https://www.hec.usace.army.mil/nexus/repository/consequences-nuget-public/'
+        description: 'NuGet repository URL to publish packages to'
+    secrets:
+      NUGET_API_KEY:
+        required: true
+        description: 'API key for NuGet repository'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET Core SDK ${{ inputs.dotnet-version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Build
+      run: dotnet build -c Release
+
+    - name: Test
+      if: ${{ inputs.run-tests }}
+      run: dotnet test -c Release --no-build
+
+    - name: Create version number
+      shell: pwsh
+      run: |
+        $TAG = $env:GITHUB_REF -replace 'refs/tags/', ''
+        $VERSION = $TAG -replace '^v', ''
+        echo "VERSION=$VERSION" >> $env:GITHUB_ENV
+
+    - name: Pack
+      shell: pwsh
+      run: |
+        $projectNames = "${{ inputs.project-names }}" -split ',' | ForEach-Object { $_.Trim() }
+        foreach ($project in $projectNames) {
+          Write-Host "Packing $project with version: $env:VERSION"
+          dotnet pack $project --configuration Release /p:PackageVersion=$env:VERSION --no-build -o ./packages
+        }
+
+    - name: Publish
+      shell: pwsh
+      run: dotnet nuget push "**/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source "${{ inputs.nuget-source }}" --skip-duplicate
