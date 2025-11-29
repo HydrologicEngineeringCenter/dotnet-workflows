@@ -17,7 +17,7 @@ on:
         description: 'Run tests after build'
       nuget-source:
         type: string
-        default: 'https://www.hec.usace.army.mil/nexus/repository/consequences-nuget-public/'
+        required: true
         description: 'NuGet repository URL to publish packages to'
     secrets:
       NUGET_API_KEY:

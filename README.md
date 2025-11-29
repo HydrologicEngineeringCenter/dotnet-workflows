@@ -39,7 +39,7 @@ Builds and publishes dev packages on push to main branch.
 | `dotnet-version` | string | No | `9.0.x` | .NET SDK version |
 | `project-names` | string | **Yes** | - | Comma-separated list of project names to pack (each uses its own version) |
 | `run-tests` | boolean | No | `false` | Run tests after build |
-| `nuget-source` | string | No | HEC Nexus | NuGet repository URL to publish packages to |
+| `nuget-source` | string | **Yes** | - | NuGet repository URL to publish packages to |
 
 **Secrets:**
 - `NUGET_API_KEY` - Required for publishing to NuGet repository
@@ -55,6 +55,7 @@ jobs:
     uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/snapshot.yml@main
     with:
       project-names: MyProject
+      nuget-source: https://nuget.example.com/repository
       run-tests: true
     secrets: inherit
 ```
@@ -63,6 +64,7 @@ jobs:
 ```yaml
 with:
   project-names: ProjectA, ProjectB, ProjectC
+  nuget-source: https://nuget.example.com/repository
 ```
 
 ### Release (`release.yml`)
@@ -75,7 +77,7 @@ Builds and publishes release packages when version tags are pushed.
 | `dotnet-version` | string | No | `9.0.x` | .NET SDK version |
 | `project-names` | string | **Yes** | - | Comma-separated list of project names to pack (all use version from tag) |
 | `run-tests` | boolean | No | `false` | Run tests after build |
-| `nuget-source` | string | No | HEC Nexus | NuGet repository URL to publish packages to |
+| `nuget-source` | string | **Yes** | - | NuGet repository URL to publish packages to |
 
 **Secrets:**
 - `NUGET_API_KEY` - Required for publishing to NuGet repository
@@ -91,6 +93,7 @@ jobs:
     uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/release.yml@main
     with:
       project-names: MyProject
+      nuget-source: https://nuget.example.com/repository
       run-tests: true
     secrets: inherit
 ```
@@ -99,6 +102,7 @@ jobs:
 ```yaml
 with:
   project-names: ProjectA, ProjectB, ProjectC
+  nuget-source: https://nuget.example.com/repository
 ```
 
 ## Examples
@@ -114,6 +118,7 @@ with:
 uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/snapshot.yml@main
 with:
   project-names: ExpressionParser
+  nuget-source: https://nuget.example.com/repository
   run-tests: true
 secrets: inherit
 ```
@@ -129,6 +134,7 @@ with:
 uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/snapshot.yml@main
 with:
   project-names: GenericControls
+  nuget-source: https://nuget.example.com/repository
 secrets: inherit
 ```
 
