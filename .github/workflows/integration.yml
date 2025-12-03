@@ -15,6 +15,10 @@ on:
         type: boolean
         default: false
         description: 'Run tests after build'
+      project-names:
+        type: string
+        default: ''
+        description: 'Comma-separated list of project names to build/test (if empty, builds entire solution)'
 
 jobs:
   CI:
@@ -31,8 +35,20 @@ jobs:
         dotnet-version: ${{ inputs.dotnet-version }}
 
     - name: Build
-      run: dotnet build -c Release ${{ inputs.warnings-as-errors && '-warnaserror' || '' }}
+      shell: pwsh
+      run: |
+        $warningsFlag = if ("${{ inputs.warnings-as-errors }}" -eq "true") { "-warnaserror" } else { "" }
+        $projectNames = "${{ inputs.project-names }}"
+        if ([string]::IsNullOrWhiteSpace($projectNames)) {
+          dotnet build -c Release $warningsFlag
+        } else {
+          $projects = $projectNames -split ',' | ForEach-Object { $_.Trim() }
+          foreach ($project in $projects) {
+            Write-Host "Building $project"
+            dotnet build $project -c Release $warningsFlag
+          }
+        }
 
     - name: Test
       if: ${{ inputs.run-tests }}
-      run: dotnet test -c Release --no-build
+      run: dotnet test -c Release
