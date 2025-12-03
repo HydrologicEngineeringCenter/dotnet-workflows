@@ -14,6 +14,7 @@ Runs on pull requests to validate builds and optionally run tests.
 | `dotnet-version` | string | No | `9.0.x` | .NET SDK version |
 | `warnings-as-errors` | boolean | No | `false` | Treat compiler warnings as errors |
 | `run-tests` | boolean | No | `false` | Run tests after build |
+| `project-names` | string | No | `` | Comma-separated list of project names to build/test (if empty, builds entire solution) |
 
 **Usage:**
 ```yaml
@@ -37,7 +38,8 @@ Builds and publishes dev packages on push to main branch.
 | Input | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `dotnet-version` | string | No | `9.0.x` | .NET SDK version |
-| `project-names` | string | **Yes** | - | Comma-separated list of project names to pack (each uses its own version) |
+| `project-names` | string | **Yes** | - | Comma-separated list of project names to pack |
+| `version` | string | No | `0.0.0` | Base version for snapshot packages (final version: `<version>.<run_number>-dev`) |
 | `run-tests` | boolean | No | `false` | Run tests after build |
 | `nuget-source` | string | **Yes** | - | NuGet repository URL to publish packages to |
 
@@ -55,6 +57,7 @@ jobs:
     uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/snapshot.yml@main
     with:
       project-names: MyProject
+      version: '1.0.0'
       nuget-source: https://nuget.example.com/repository
       run-tests: true
     secrets: inherit
@@ -64,6 +67,7 @@ jobs:
 ```yaml
 with:
   project-names: ProjectA, ProjectB, ProjectC
+  version: '2.1.0'
   nuget-source: https://nuget.example.com/repository
 ```
 
@@ -118,6 +122,7 @@ with:
 uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/snapshot.yml@main
 with:
   project-names: ExpressionParser
+  version: '1.0.0'
   nuget-source: https://nuget.example.com/repository
   run-tests: true
 secrets: inherit
@@ -134,6 +139,7 @@ with:
 uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/snapshot.yml@main
 with:
   project-names: GenericControls
+  version: '1.0.0'
   nuget-source: https://nuget.example.com/repository
 secrets: inherit
 ```
