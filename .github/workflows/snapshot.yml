@@ -39,7 +39,13 @@ jobs:
         dotnet-version: ${{ inputs.dotnet-version }}
 
     - name: Build
-      run: dotnet build -c Release -o ./build-output
+      shell: pwsh
+      run: |
+        $projectNames = "${{ inputs.project-names }}" -split ',' | ForEach-Object { $_.Trim() }
+        foreach ($project in $projectNames) {
+          Write-Host "Building $project"
+          dotnet build $project -c Release -o ./build-output
+        }
 
     - name: Test
       if: ${{ inputs.run-tests }}
