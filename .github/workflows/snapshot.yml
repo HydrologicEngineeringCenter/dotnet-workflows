@@ -10,7 +10,11 @@ on:
       project-names:
         type: string
         required: true
-        description: 'Comma-separated list of project names to pack (first project is used for version extraction)'
+        description: 'Comma-separated list of project names to pack'
+      version:
+        type: string
+        default: '0.0.0'
+        description: 'Base version for snapshot packages'
       run-tests:
         type: boolean
         default: false
@@ -42,31 +46,24 @@ jobs:
       shell: pwsh
       run: |
         $projectNames = "${{ inputs.project-names }}" -split ',' | ForEach-Object { $_.Trim() }
+        $snapshotVersion = "${{ inputs.version }}.${{ github.run_number }}-dev"
         foreach ($project in $projectNames) {
-          Write-Host "Building $project"
-          dotnet build $project -c Release -o ./build-output
+          Write-Host "Building $project with version: $snapshotVersion"
+          dotnet build $project -c Release /p:Version=$snapshotVersion
         }
 
     - name: Test
       if: ${{ inputs.run-tests }}
-      run: dotnet test -c Release
+      run: dotnet test -c Release --no-build
 
     - name: Pack
-      shell: powershell
+      shell: pwsh
       run: |
         $projectNames = "${{ inputs.project-names }}" -split ',' | ForEach-Object { $_.Trim() }
+        $snapshotVersion = "${{ inputs.version }}.${{ github.run_number }}-dev"
         foreach ($project in $projectNames) {
-          # Get the assembly version from the built DLL
-          $assemblyPath = "./build-output/$project.dll"
-          $assembly = [System.Reflection.Assembly]::LoadFrom((Resolve-Path $assemblyPath).Path)
-          $assemblyVersion = $assembly.GetName().Version
-
-          # Extract major.minor.patch and create snapshot version
-          $baseVersion = "$($assemblyVersion.Major).$($assemblyVersion.Minor).$($assemblyVersion.Build)"
-          $snapshotVersion = "${baseVersion}.${{ github.run_number }}-dev"
-
-          Write-Host "Packing $project with version: $snapshotVersion (from assembly version: $assemblyVersion)"
-          dotnet pack $project --configuration Release /p:PackageVersion=$snapshotVersion -o ./packages
+          Write-Host "Packing $project with version: $snapshotVersion"
+          dotnet pack $project --configuration Release /p:Version=$snapshotVersion --no-build -o ./packages
         }
 
     - name: Publish
