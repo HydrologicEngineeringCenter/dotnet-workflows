@@ -31,7 +31,7 @@ All workflows use `workflow_call` trigger (reusable workflows) and run on `windo
 - **Release**: Strips `v` prefix from git tag (e.g., `v1.2.3` → `1.2.3`). All projects use the same tag version via comma-separated `project-names` input.
 
 **NuGet Publishing:**
-- Configurable via `nuget-source` input (defaults to HEC Nexus)
+- Requires `nuget-source` input (no default)
 - Requires `NUGET_API_KEY` secret
 - Uses `--skip-duplicate` to avoid conflicts
 
