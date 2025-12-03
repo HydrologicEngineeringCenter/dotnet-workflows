@@ -37,9 +37,12 @@ Builds and publishes dev packages on push to main branch.
 | Input | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `dotnet-version` | string | No | `9.0.x` | .NET SDK version |
-| `project-names` | string | **Yes** | - | Comma-separated list of project names to pack (each uses its own version) |
+| `project-names` | string | **Yes** | - | Comma-separated list of project names to pack |
+| `version` | string | No | `0.0.0` | Base version for snapshot packages |
 | `run-tests` | boolean | No | `false` | Run tests after build |
 | `nuget-source` | string | **Yes** | - | NuGet repository URL to publish packages to |
+
+**Versioning:** Packages are versioned as `{version}.{run_number}-dev` (e.g., `1.2.3.45-dev`). The assembly inside the package will have the same version embedded.
 
 **Secrets:**
 - `NUGET_API_KEY` - Required for publishing to NuGet repository
@@ -55,6 +58,7 @@ jobs:
     uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/snapshot.yml@main
     with:
       project-names: MyProject
+      version: '1.0.0'
       nuget-source: https://nuget.example.com/repository
       run-tests: true
     secrets: inherit
@@ -64,6 +68,7 @@ jobs:
 ```yaml
 with:
   project-names: ProjectA, ProjectB, ProjectC
+  version: '2.1.0'
   nuget-source: https://nuget.example.com/repository
 ```
 
@@ -78,6 +83,8 @@ Builds and publishes release packages when version tags are pushed.
 | `project-names` | string | **Yes** | - | Comma-separated list of project names to pack (all use version from tag) |
 | `run-tests` | boolean | No | `false` | Run tests after build |
 | `nuget-source` | string | **Yes** | - | NuGet repository URL to publish packages to |
+
+**Versioning:** Version is extracted from the git tag (e.g., `v1.2.3` becomes `1.2.3`). The assembly inside the package will have the same version embedded.
 
 **Secrets:**
 - `NUGET_API_KEY` - Required for publishing to NuGet repository
@@ -118,6 +125,7 @@ with:
 uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/snapshot.yml@main
 with:
   project-names: ExpressionParser
+  version: '1.0.0'
   nuget-source: https://nuget.example.com/repository
   run-tests: true
 secrets: inherit
@@ -134,6 +142,7 @@ with:
 uses: HydrologicEngineeringCenter/dotnet-workflows/.github/workflows/snapshot.yml@main
 with:
   project-names: GenericControls
+  version: '1.0.0'
   nuget-source: https://nuget.example.com/repository
 secrets: inherit
 ```
