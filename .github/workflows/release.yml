@@ -38,19 +38,6 @@ jobs:
       with:
         dotnet-version: ${{ inputs.dotnet-version }}
 
-    - name: Build
-      shell: pwsh
-      run: |
-        $projectNames = "${{ inputs.project-names }}" -split ',' | ForEach-Object { $_.Trim() }
-        foreach ($project in $projectNames) {
-          Write-Host "Building $project"
-          dotnet build $project -c Release
-        }
-
-    - name: Test
-      if: ${{ inputs.run-tests }}
-      run: dotnet test -c Release
-
     - name: Create version number
       shell: pwsh
       run: |
@@ -58,13 +45,26 @@ jobs:
         $VERSION = $TAG -replace '^v', ''
         echo "VERSION=$VERSION" >> $env:GITHUB_ENV
 
+    - name: Build
+      shell: pwsh
+      run: |
+        $projectNames = "${{ inputs.project-names }}" -split ',' | ForEach-Object { $_.Trim() }
+        foreach ($project in $projectNames) {
+          Write-Host "Building $project with version: $env:VERSION"
+          dotnet build $project -c Release /p:Version=$env:VERSION
+        }
+
+    - name: Test
+      if: ${{ inputs.run-tests }}
+      run: dotnet test -c Release --no-build
+
     - name: Pack
       shell: pwsh
       run: |
         $projectNames = "${{ inputs.project-names }}" -split ',' | ForEach-Object { $_.Trim() }
         foreach ($project in $projectNames) {
           Write-Host "Packing $project with version: $env:VERSION"
-          dotnet pack $project --configuration Release /p:PackageVersion=$env:VERSION --no-build -o ./packages
+          dotnet pack $project --configuration Release /p:Version=$env:VERSION --no-build -o ./packages
         }
 
     - name: Publish
