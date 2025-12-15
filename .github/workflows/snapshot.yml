@@ -54,7 +54,7 @@ jobs:
 
     - name: Test
       if: ${{ inputs.run-tests }}
-      run: dotnet test -c Release --no-build
+      run: dotnet test -c Release
 
     - name: Pack
       shell: pwsh
