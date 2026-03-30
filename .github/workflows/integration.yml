@@ -6,7 +6,7 @@ on:
       dotnet-version:
         type: string
         default: '9.0.x'
-        description: '.NET SDK version to use'
+        description: '.NET SDK versions to install (e.g. "8.0.x\n9.0.x\n10.0.x" for multiple versions)'
       warnings-as-errors:
         type: boolean
         default: false
@@ -51,4 +51,6 @@ jobs:
 
     - name: Test
       if: ${{ inputs.run-tests }}
+      env:
+        VSTEST_CONNECTION_TIMEOUT: 600
       run: dotnet test -c Release
